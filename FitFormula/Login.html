@@ -1,0 +1,142 @@
+﻿<!DOCTYPE html>
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-app.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.0.2/firebase-auth.js";
+
+    const firebaseConfig = {
+        apiKey: "AIzaSyBZdN7AuMkwZFSFwKWLy6QzVCx8vGMuK68",
+        authDomain: "fitformula-27ac5.firebaseapp.com",
+        projectId: "fitformula-27ac5",
+        storageBucket: "fitformula-27ac5.firebasestorage.app",
+        messagingSenderId: "511504403783",
+        appId: "1:511504403783:web:b68aceed008d0627195062",
+        measurementId: "G-LWXSJJKPQ9"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const loginButton = document.getElementById("loginButton");
+        const registerButton = document.getElementById("registerButton");
+        const toggleRegister = document.getElementById("toggleRegister");
+        const loginForm = document.getElementById("loginForm");
+        const nameField = document.getElementById("nameField");
+
+        let isRegistering = false;
+
+        toggleRegister.addEventListener("click", () => {
+            isRegistering = !isRegistering;
+            nameField.style.display = isRegistering ? "block" : "none";
+            loginButton.style.display = isRegistering ? "none" : "block";
+            registerButton.style.display = isRegistering ? "block" : "none";
+            toggleRegister.innerText = isRegistering ? "Already have an account? Login" : "Don't have an account? Register";
+        });
+
+        loginButton.addEventListener("click", async () => {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            try {
+                await signInWithEmailAndPassword(auth, email, password);
+                window.location.href = "details.html";
+            } catch (error) {
+                alert("Login Failed: " + error.message);
+            }
+        });
+
+        registerButton.addEventListener("click", async () => {
+            const name = document.getElementById("name").value;
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            try {
+                await createUserWithEmailAndPassword(auth, email, password);
+                alert("Registration Successful! Please login.");
+                toggleRegister.click(); // Switch back to login mode
+            } catch (error) {
+                alert("Registration Failed: " + error.message);
+            }
+        });
+    });
+</script>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FitFormula - Login</title>
+    <style>
+        /* Styling similar to previous code */
+        body {
+            background-color: #FEF7FF;
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-top: 50px;
+        }
+
+        .form-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 15px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-control {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 10px;
+            background-color: #A666AE;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+            .btn:hover {
+                background-color: #924D92;
+            }
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <h1>FitFormula</h1>
+        <div class="form-container">
+            <form id="loginForm">
+                <div id="nameField" class="form-group" style="display:none;">
+                    <label for="name">Name</label>
+                    <input type="text" class="form-control" id="name" placeholder="Enter your name" />
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" class="form-control" id="email" placeholder="Enter email" required />
+                </div>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <input type="password" class="form-control" id="password" placeholder="Enter password" required />
+                </div>
+                <button type="button" class="btn" id="loginButton">Login</button>
+                <button type="button" class="btn" id="registerButton" style="display:none;">Register</button>
+            </form>
+            <button id="toggleRegister" class="btn">Don't have an account? Register</button>
+        </div>
+    </div>
+</body>
+
+</html>
