@@ -20,7 +20,7 @@ namespace FitFormula
             routes.MapRoute(
                     name: "Default",
                     url: "{controller}/{action}/{id}",
-                    defaults: new { action = "Index", id = UrlParameter.Optional }
+                    defaults: new { controler= "Auth", action = "Index", id = UrlParameter.Optional }
                 );  
         }
     }

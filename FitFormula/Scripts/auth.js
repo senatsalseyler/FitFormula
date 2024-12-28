@@ -1,6 +1,7 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
-    const auth = firebase.auth();
+﻿import { auth } from "./firebase-config.js";
+import { signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-auth.js";
 
+document.addEventListener('DOMContentLoaded', () => {
     // Login
     const loginButton = document.getElementById('loginButton');
     if (loginButton) {
@@ -9,7 +10,7 @@
             const password = document.getElementById('password').value;
 
             try {
-                const result = await auth.signInWithEmailAndPassword(email, password);
+                const result = await signInWithEmailAndPassword(auth, email, password);
                 const idToken = await result.user.getIdToken();
 
                 // Verify token with server
@@ -39,7 +40,7 @@
             const password = document.getElementById('password').value;
 
             try {
-                await auth.createUserWithEmailAndPassword(email, password);
+                await createUserWithEmailAndPassword(auth, email, password);
                 alert('Registration successful! Please login.');
                 window.location.href = '/Auth/Login';
             } catch (error) {
