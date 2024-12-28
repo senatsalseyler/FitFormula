@@ -415,7 +415,6 @@
     <Compile Include="Models\DailyIntake.cs" />
     <Compile Include="Models\Food.cs" />
     <Compile Include="Models\User.cs" />
-    <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Services\FirebaseAuthService.cs" />
     <Compile Include="Site.Master.cs">

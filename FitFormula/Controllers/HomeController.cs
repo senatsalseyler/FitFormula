@@ -1,19 +1,17 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.AspNetCore.Authorization;
-using System.Web.Mvc;
+﻿using System.Web.Mvc;
 
 namespace FitFormula.Controllers
 {
     public class HomeController : Controller
     {
         [Authorize]
-        public IActionResult Index()
+        public ActionResult Index()
         {
             return View();
         }
 
         [Authorize]
-        public IActionResult Details()
+        public ActionResult Details()
         {
             return View();
         }

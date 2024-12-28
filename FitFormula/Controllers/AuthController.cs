@@ -1,5 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using System.Web.Mvc;
+﻿using System.Web.Mvc;
 
 namespace FitFormula.Controllers
 {
@@ -10,13 +9,13 @@ namespace FitFormula.Controllers
         }
 
         [HttpGet]
-        public IActionResult Login()
+        public ActionResult Login()
         {
             return View();
         }
 
         [HttpGet]
-        public IActionResult Register()
+        public ActionResult Register()
         {
             return View();
         }
