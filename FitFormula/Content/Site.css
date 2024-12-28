@@ -1,21 +1,55 @@
-﻿/* Wrapping element */
-/* Set some basic padding to keep content from hitting the edges */
-.body-content {
-    margin-top: 15px;
-    padding-left: 15px;
-    padding-right: 15px;
+﻿body {
+    background-color: #FEF7FF;
+    font-family: Arial, sans-serif;
+    margin: 0;
+    padding: 0;
 }
 
-/* Set widths on the form inputs since otherwise they're 100% wide */
-input,
-select,
-textarea {
-    max-width: 280px;
+.container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 50px;
 }
 
-/* Responsive: Portrait tablets and up */
-@media screen and (min-width: 768px) {
-    .body-content {
-        padding: 0;
+.form-container {
+    background-color: white;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 400px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-control {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #A666AE;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+    .btn:hover {
+        background-color: #924D92;
     }
+
+.btn-link {
+    text-decoration: none;
+    color: #A666AE;
+    margin-top: 10px;
+    text-align: center;
+    display: block;
 }

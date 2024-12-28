@@ -1,5 +1,5 @@
 ﻿@{
-    ViewData["Title"] = "Login";
+    ViewBag.Title = "Login";
 }
 
 <div class="container">
@@ -19,3 +19,10 @@
         <a href="/Auth/Register" class="btn btn-link">Don't have an account? Register</a>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.x.x/firebase-auth.js"></script>
+    <script src="~/Scripts/firebase-config.js"></script>
+    <script src="~/Scripts/auth.js"></script>
+}
