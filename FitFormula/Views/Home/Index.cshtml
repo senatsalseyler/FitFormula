@@ -22,10 +22,10 @@
                 <div class="card-body">
                     <h3 id="userName" class="mb-4">Loading...</h3>
                     <div class="d-grid gap-2">
-                        <button class="btn btn-primary" id="calendarBtn">
-                            <i class="fas fa-calendar"></i> Calendar
+                        <button class="btn btn-primary btn-lg mb-2" id="calendarBtn">
+                            <i class="fas fa-calendar"></i> View Calorie History
                         </button>
-                        <button class="btn btn-danger" id="signOutButton">
+                        <button class="btn btn-danger btn-lg" id="signOutButton">
                             <i class="fas fa-sign-out-alt"></i> Sign Out
                         </button>
                     </div>
@@ -40,8 +40,9 @@
                     <div class="progress-circle-container mb-4">
                         <div class="position-relative" style="width: 200px; height: 200px; margin: 0 auto;">
                             <canvas id="progressCircle" width="200" height="200"></canvas>
-                            <div class="position-absolute top-50 start-50 translate-middle">
+                            <div class="position-absolute top-50 start-50 translate-middle text-center">
                                 <h3 id="calorieCount">0/0</h3>
+                                <small class="text-muted">Daily Calories</small>
                             </div>
                         </div>
                     </div>
@@ -56,23 +57,48 @@
     </div>
 </div>
 
+<!-- Calendar Modal -->
+<div class="modal fade" id="calendarModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title">Your Calorie History</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="calendar-wrapper">
+                    <div id="calendar" class="fc fc-media-screen fc-direction-ltr fc-theme-standard"></div>
+                </div>
+                <div id="dailyFoodList" class="mt-4 px-3">
+                    <!-- Daily food items will be shown here -->
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Portion Modal -->
 <div class="modal fade" id="portionModal" tabindex="-1">
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Enter Portion Size</h5>
+                <h5 class="modal-title">Add Food Portion</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>Portion (grams):</label>
-                    <input type="number" class="form-control" id="portionSize" min="1">
+                    <label class="form-label">How many grams did you eat?</label>
+                    <input type="number" class="form-control form-control-lg" id="portionSize" min="1" placeholder="Enter portion in grams">
+                </div>
+                <div class="progress mt-3">
+                    <div class="progress-bar" id="addFoodProgress" role="progressbar" style="width: 0%"></div>
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-primary" id="addFoodBtn">Add Food</button>
+                <button type="button" class="btn btn-secondary btn-lg" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-success btn-lg" id="addFoodBtn">
+                    <i class="fas fa-plus"></i> Add to My Day
+                </button>
             </div>
         </div>
     </div>
@@ -83,11 +109,14 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Food Information</h5>
+                <h5 class="modal-title">Nutritional Information</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body" id="foodInfoContent">
                 <!-- Food details will be added here -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-primary btn-lg" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
     </div>
@@ -99,6 +128,51 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     <script src="https://kit.fontawesome.com/your-font-awesome-kit.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/fullcalendar@5.11.3/main.min.css" rel="stylesheet">
+    <style>
+        .fc {
+            max-width: 100%;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .fc-daygrid-day {
+            min-height: 100px !important;
+        }
+
+        .fc-daygrid-day-number {
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+
+        .fc-event {
+            cursor: pointer;
+            padding: 4px;
+            margin: 2px 0;
+        }
+
+        .fc-event-title {
+            font-weight: bold;
+        }
+
+        .calendar-wrapper {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .search-result-buttons {
+            display: flex;
+            gap: 5px;
+        }
+
+            .search-result-buttons button {
+                min-width: 120px;
+            }
+    </style>
 
     <script>
         // Firebase initialization
@@ -119,10 +193,11 @@
         const db = firebase.firestore();
         let currentUser = null;
         let selectedFood = null;
-        let calorieGoal = 0;
+        let calorieGoal = 2000; // Default value
         let currentCalories = 0;
+        let calendar = null;
 
-        // Progress Circle Setup
+        // Progress Circle Setup with Animation
         const ctx = document.getElementById('progressCircle').getContext('2d');
         const progressCircle = new Chart(ctx, {
             type: 'doughnut',
@@ -136,11 +211,39 @@
                 cutout: '80%',
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: false
+                animation: {
+                    duration: 1500,
+                    easing: 'easeInOutQuart'
+                }
             }
         });
 
-        // Load user data
+        // Calendar Setup with Better Styling
+        document.addEventListener('DOMContentLoaded', function() {
+            const calendarEl = document.getElementById('calendar');
+            calendar = new FullCalendar.Calendar(calendarEl, {
+                initialView: 'dayGridMonth',
+                headerToolbar: {
+                    left: 'prev,next today',
+                    center: 'title',
+                    right: 'dayGridMonth,dayGridWeek'
+                },
+                height: 'auto',
+                selectable: true,
+                dateClick: function(info) {
+                    loadDayFoods(info.dateStr);
+                },
+                eventClick: function(info) {
+                    loadDayFoods(info.event.startStr);
+                },
+                eventDidMount: function(info) {
+                    info.el.title = `Click to view details\n${info.event.title}`;
+                }
+            });
+            calendar.render();
+        });
+
+        // Load user data with proper calorie goal
         firebase.auth().onAuthStateChanged(async (user) => {
             if (user) {
                 currentUser = user;
@@ -148,13 +251,107 @@
                 const userData = userDoc.data();
 
                 document.getElementById('userName').textContent = userData.username;
-                calorieGoal = userData.calorieGoal;
-                updateCalorieDisplay();
-                loadTodaysFoods();
+                calorieGoal = userData.calorieGoal || 2000; // Set user's calorie goal
+                await loadTodaysFoods(); // Load today's foods first
+                loadCalendarData(); // Then load calendar data
             } else {
                 window.location.href = '@Url.Action("Login", "Auth")';
             }
         });
+
+        // Calendar functionality
+        document.getElementById('calendarBtn').addEventListener('click', () => {
+            new bootstrap.Modal(document.getElementById('calendarModal')).show();
+            setTimeout(() => {
+                calendar.render(); // Re-render calendar after modal is shown
+            }, 150);
+        });
+
+        async function loadCalendarData() {
+            try {
+                const firstDay = new Date();
+                firstDay.setDate(1); // Start from first day of current month
+                const lastDay = new Date(firstDay.getFullYear(), firstDay.getMonth() + 2, 0); // End at last day of next month
+
+                const snapshot = await db.collection('users').doc(currentUser.uid)
+                    .collection('foods')
+                    .where('date', '>=', firstDay.toISOString().split('T')[0])
+                    .where('date', '<=', lastDay.toISOString().split('T')[0])
+                    .get();
+
+                const dailyCalories = {};
+                snapshot.forEach(doc => {
+                    const food = doc.data();
+                    const date = food.date;
+                    dailyCalories[date] = (dailyCalories[date] || 0) + food.calories;
+                });
+
+                const events = Object.entries(dailyCalories).map(([date, calories]) => ({
+                    title: `${calories} calories`,
+                    start: date,
+                    backgroundColor: calories > calorieGoal ? '#dc3545' : '#28a745',
+                    borderColor: calories > calorieGoal ? '#dc3545' : '#28a745',
+                    classNames: ['calendar-event']
+                }));
+
+                calendar.removeAllEvents();
+                calendar.addEventSource(events);
+            } catch (error) {
+                console.error('Error loading calendar data:', error);
+            }
+        }
+
+        async function loadDayFoods(date) {
+            const foodList = document.getElementById('dailyFoodList');
+            foodList.innerHTML = `
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">Foods for ${new Date(date).toLocaleDateString()}</h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="list-group">
+                </div>
+            `;
+
+            try {
+                const snapshot = await db.collection('users').doc(currentUser.uid)
+                    .collection('foods')
+                    .where('date', '==', date)
+                    .orderBy('timestamp', 'desc')
+                    .get();
+
+                let totalCalories = 0;
+                const foodListDiv = foodList.querySelector('.list-group');
+
+                snapshot.forEach(doc => {
+                    const food = doc.data();
+                    totalCalories += food.calories;
+
+                    const item = document.createElement('div');
+                    item.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    item.innerHTML = `
+                        <div>
+                            <h6 class="mb-0">${food.name}</h6>
+                            <small class="text-muted">${food.portion}g</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">${food.calories} cal</span>
+                    `;
+                    foodListDiv.appendChild(item);
+                });
+
+                // Add total calories summary
+                const summary = document.createElement('div');
+                summary.className = 'mt-3 alert ' + (totalCalories > calorieGoal ? 'alert-danger' : 'alert-success');
+                summary.innerHTML = `
+                    <h6 class="mb-0">Daily Summary</h6>
+                    <p class="mb-0">Total Calories: ${totalCalories} / ${calorieGoal}</p>
+                `;
+                foodList.querySelector('.card-body').appendChild(summary);
+            } catch (error) {
+                console.error('Error loading day foods:', error);
+                foodList.innerHTML += '<div class="alert alert-danger">Error loading food data</div>';
+            }
+        }
 
         // Search functionality
         let searchTimeout;
@@ -194,39 +391,39 @@
                     const item = document.createElement('div');
                     item.className = 'list-group-item d-flex justify-content-between align-items-center';
                     item.innerHTML = `
-                        <img src="${imageUrl}" alt="${product.product_name}" style="width: 50px; height: 50px; object-fit: cover;">
-                        <div class="ms-3 me-auto">
-                            <div class="fw-bold">${product.product_name}</div>
-                            <small>${calories} kcal/100g</small>
+                        <div class="d-flex align-items-center">
+                            <img src="${imageUrl}" alt="${product.product_name}"
+                                style="width: 50px; height: 50px; object-fit: cover; border-radius: 4px;">
+                            <div class="ms-3">
+                                <div class="fw-bold">${product.product_name}</div>
+                                <small class="text-muted">${calories} calories per 100g</small>
+                            </div>
                         </div>
-                        <div class="btn-group">
-                            <button class="btn btn-success btn-sm add-food" data-product='${JSON.stringify(product)}'>
-                                <i class="fas fa-plus"></i>
+                        <div class="search-result-buttons">
+                            <button class="btn btn-success btn-lg add-food" title="Add this food">
+                                <i class="fas fa-plus"></i> Add Food
                             </button>
-                            <button class="btn btn-info btn-sm info-food" data-product='${JSON.stringify(product)}'>
-                                <i class="fas fa-info"></i>
+                            <button class="btn btn-info btn-lg info-food" title="View nutrition info">
+                                <i class="fas fa-info-circle"></i> Details
                             </button>
                         </div>
                     `;
-                    searchResultsList.appendChild(item);
-                });
 
-                // Add event listeners
-                document.querySelectorAll('.add-food').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        selectedFood = JSON.parse(e.currentTarget.dataset.product);
+                    // Store product data
+                    const addBtn = item.querySelector('.add-food');
+                    const infoBtn = item.querySelector('.info-food');
+                    addBtn.addEventListener('click', () => {
+                        selectedFood = product;
+                        document.getElementById('addFoodProgress').style.width = '0%';
                         new bootstrap.Modal(document.getElementById('portionModal')).show();
                     });
-                });
+                    infoBtn.addEventListener('click', () => showFoodInfo(product));
 
-                document.querySelectorAll('.info-food').forEach(btn => {
-                    btn.addEventListener('click', (e) => {
-                        const product = JSON.parse(e.currentTarget.dataset.product);
-                        showFoodInfo(product);
-                    });
+                    searchResultsList.appendChild(item);
                 });
             } catch (error) {
-                searchResultsList.innerHTML = '<div class="alert alert-danger">Error searching foods</div>';
+                console.error('Search error:', error);
+                searchResultsList.innerHTML = '<div class="alert alert-danger">Error searching foods. Please try again.</div>';
             }
         }
 
@@ -237,6 +434,9 @@
                 alert('Please enter a valid portion size');
                 return;
             }
+
+            const progressBar = document.getElementById('addFoodProgress');
+            progressBar.style.width = '50%';
 
             const calories = (selectedFood.nutriments['energy-kcal_100g'] || 0) * (portionSize / 100);
             const foodData = {
@@ -251,13 +451,26 @@
                 await db.collection('users').doc(currentUser.uid)
                     .collection('foods').add(foodData);
 
-                bootstrap.Modal.getInstance(document.getElementById('portionModal')).hide();
-                document.getElementById('portionSize').value = '';
-                document.getElementById('searchInput').value = '';
-                document.getElementById('searchResults').classList.add('d-none');
-                loadTodaysFoods();
+                progressBar.style.width = '100%';
+
+                // Update current calories and display
+                currentCalories += foodData.calories;
+                updateCalorieDisplay();
+
+                setTimeout(() => {
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('portionModal'));
+                    modal.hide();
+                    document.getElementById('portionSize').value = '';
+                    document.getElementById('searchInput').value = '';
+                    document.getElementById('searchResults').classList.add('d-none');
+                    document.getElementById('addFoodProgress').style.width = '0%';
+                    loadTodaysFoods();
+                    loadCalendarData();
+                }, 500);
             } catch (error) {
-                alert('Error adding food');
+                console.error('Error adding food:', error);
+                progressBar.style.width = '0%';
+                alert('Error adding food. Please try again.');
             }
         });
 
@@ -265,67 +478,96 @@
         function showFoodInfo(product) {
             const content = document.getElementById('foodInfoContent');
             content.innerHTML = `
-                <div class="text-center mb-3">
+                <div class="text-center mb-4">
                     <img src="${product.image_url || '/path/to/default/image.jpg'}"
                          alt="${product.product_name}"
-                         style="max-width: 200px;">
+                         style="max-width: 200px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
                 </div>
-                <h4>${product.product_name}</h4>
-                <p>Per 100g:</p>
-                <ul class="list-group">
-                    <li class="list-group-item">Calories: ${product.nutriments['energy-kcal_100g'] || 0} kcal</li>
-                    <li class="list-group-item">Protein: ${product.nutriments.proteins_100g || 0}g</li>
-                    <li class="list-group-item">Carbohydrates: ${product.nutriments.carbohydrates_100g || 0}g</li>
-                    <li class="list-group-item">Fat: ${product.nutriments.fat_100g || 0}g</li>
-                </ul>
+                <h4 class="mb-3">${product.product_name}</h4>
+                <div class="card">
+                    <div class="card-header bg-primary text-white">
+                        Nutrition Facts (per 100g)
+                    </div>
+                    <ul class="list-group list-group-flush">
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Calories
+                            <span class="badge bg-primary rounded-pill">${product.nutriments['energy-kcal_100g'] || 0} kcal</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Protein
+                            <span class="badge bg-success rounded-pill">${product.nutriments.proteins_100g || 0}g</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Carbohydrates
+                            <span class="badge bg-info rounded-pill">${product.nutriments.carbohydrates_100g || 0}g</span>
+                        </li>
+                        <li class="list-group-item d-flex justify-content-between align-items-center">
+                            Fat
+                            <span class="badge bg-warning rounded-pill">${product.nutriments.fat_100g || 0}g</span>
+                        </li>
+                    </ul>
+                </div>
             `;
             new bootstrap.Modal(document.getElementById('foodInfoModal')).show();
         }
 
-        // Load today's foods
+        // Load today's foods with running total
         async function loadTodaysFoods() {
             const today = new Date().toISOString().split('T')[0];
             const foodList = document.getElementById('foodList');
             foodList.innerHTML = '';
             currentCalories = 0;
 
-            const snapshot = await db.collection('users').doc(currentUser.uid)
-                .collection('foods')
-                .where('date', '==', today)
-                .orderBy('timestamp', 'desc')
-                .get();
+            try {
+                const snapshot = await db.collection('users').doc(currentUser.uid)
+                    .collection('foods')
+                    .where('date', '==', today)
+                    .orderBy('timestamp', 'desc')
+                    .get();
 
-            snapshot.forEach(doc => {
-                const food = doc.data();
-                currentCalories += food.calories;
+                snapshot.forEach(doc => {
+                    const food = doc.data();
+                    currentCalories += food.calories;
 
-                const item = document.createElement('div');
-                item.className = 'list-group-item d-flex justify-content-between align-items-center';
-                item.innerHTML = `
-                    <div>
-                        <h6 class="mb-0">${food.name}</h6>
-                        <small>${food.portion}g</small>
-                    </div>
-                    <span class="badge bg-primary rounded-pill">${food.calories} kcal</span>
-                `;
-                foodList.appendChild(item);
-            });
+                    const item = document.createElement('div');
+                    item.className = 'list-group-item d-flex justify-content-between align-items-center';
+                    item.innerHTML = `
+                        <div>
+                            <h6 class="mb-0">${food.name}</h6>
+                            <small class="text-muted">${food.portion}g</small>
+                        </div>
+                        <span class="badge bg-primary rounded-pill">${food.calories} cal</span>
+                    `;
+                    foodList.appendChild(item);
+                });
 
-            updateCalorieDisplay();
+                updateCalorieDisplay();
+            } catch (error) {
+                console.error('Error loading foods:', error);
+                foodList.innerHTML = '<div class="alert alert-danger">Error loading today\'s foods</div>';
+            }
         }
 
-        // Update calorie display and progress
+        // Update calorie display and progress with animation
         function updateCalorieDisplay() {
             document.getElementById('calorieCount').textContent = `${Math.round(currentCalories)}/${calorieGoal}`;
-            const percentage = (currentCalories / calorieGoal) * 100;
+            const percentage = Math.min((currentCalories / calorieGoal) * 100, 100);
+
             progressCircle.data.datasets[0].data = [percentage, Math.max(0, 100 - percentage)];
+            progressCircle.data.datasets[0].backgroundColor = [
+                percentage > 100 ? '#dc3545' : '#007bff',
+                '#e9ecef'
+            ];
             progressCircle.update();
         }
 
-        // Sign out
+        // Sign out functionality
         document.getElementById('signOutButton').addEventListener('click', () => {
             firebase.auth().signOut().then(() => {
                 window.location.href = '@Url.Action("Login", "Auth")';
+            }).catch((error) => {
+                console.error('Sign out error:', error);
+                alert('Error signing out. Please try again.');
             });
         });
     </script>
