@@ -1,19 +1,14 @@
 ﻿using System.Web.Mvc;
 
-namespace FitFormula.Controllers
+public class HomeController : Controller
 {
-    public class HomeController : Controller
+    public ActionResult Index()
     {
-        [Authorize]
-        public ActionResult Index()
-        {
-            return View();
-        }
+        return View();
+    }
 
-        [Authorize]
-        public ActionResult Details()
-        {
-            return View();
-        }
+    public ActionResult UserDetails()
+    {
+        return View();
     }
 }

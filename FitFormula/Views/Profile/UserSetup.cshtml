@@ -1,0 +1,19 @@
+﻿@{
+    ViewBag.Title = "User Setup";
+}
+
+<div class="container">
+    <h2>Complete Your Profile</h2>
+    @using (Html.BeginForm("UserSetup", "Profile", FormMethod.Post))
+    {
+        <div class="form-group">
+            <label>Username:</label>
+            <input type="text" name="username" class="form-control" required />
+        </div>
+        <div class="form-group">
+            <label>Daily Calorie Goal:</label>
+            <input type="number" name="calorieGoal" class="form-control" required />
+        </div>
+        <button type="submit" class="btn btn-primary">Save Profile</button>
+    }
+</div>

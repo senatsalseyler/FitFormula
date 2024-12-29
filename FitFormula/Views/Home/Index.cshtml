@@ -1,0 +1,46 @@
+﻿@{
+    ViewBag.Title = "Home";
+}
+
+<div class="container mt-5">
+    <h2>Welcome to the Homepage</h2>
+    <button id="signOutButton" class="btn btn-danger mt-3">Sign Out</button>
+</div>
+
+@section Scripts {
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyBZdN7AuMkwZFSFwKWLy6QzVCx8vGMuK68",
+            authDomain: "fitformula-27ac5.firebaseapp.com",
+            databaseURL: "https://fitformula-27ac5-default-rtdb.firebaseio.com",
+            projectId: "fitformula-27ac5",
+            storageBucket: "fitformula-27ac5.firebasestorage.app",
+            messagingSenderId: "511504403783",
+            appId: "1:511504403783:web:b68aceed008d0627195062",
+            measurementId: "G-LWXSJJKPQ9"
+        };
+
+        // Initialize Firebase
+        if (!firebase.apps.length) {
+            firebase.initializeApp(firebaseConfig);
+        }
+
+        // Check if user is logged in
+        firebase.auth().onAuthStateChanged(function(user) {
+            if (!user) {
+                window.location.href = '@Url.Action("Login", "Auth")';
+            }
+        });
+
+        document.getElementById('signOutButton').addEventListener('click', function() {
+            firebase.auth().signOut().then(() => {
+                window.location.href = '@Url.Action("Login", "Auth")';
+            }).catch((error) => {
+                alert('Sign out failed: ' + error.message);
+            });
+        });
+    </script>
+}
